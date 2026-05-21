@@ -3,7 +3,7 @@ import type { TextStyle } from 'react-native';
 
 type Props = {
   children: string;
-  tone?: 'brass' | 'inkMuted' | 'amberDeep' | 'inkDeep';
+  tone?: 'brass' | 'brassLight' | 'inkMuted' | 'amberDeep' | 'inkDeep';
   size?: number;
   tracking?: number;
   style?: TextStyle;

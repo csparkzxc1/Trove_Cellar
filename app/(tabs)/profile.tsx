@@ -7,6 +7,7 @@ import { BrandWordmark } from '@/components/BrandWordmark';
 import { Text } from '@/components/ui/Text';
 import { MonoLabel } from '@/components/ui/MonoLabel';
 import { Card } from '@/components/ui/Card';
+import { InsightsPanel } from '@/components/InsightsPanel';
 import { colors } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
 import { useTastings } from '@/stores/tastings';
@@ -106,6 +107,13 @@ export default function ProfileScreen() {
             <StatItem label="Since" value="2026" />
           </View>
         </Card>
+
+        {/* Insights */}
+        {tastings.length > 0 && (
+          <View style={{ marginBottom: 18 }}>
+            <InsightsPanel tastings={tastings} />
+          </View>
+        )}
 
         {/* Actions */}
         <Pressable

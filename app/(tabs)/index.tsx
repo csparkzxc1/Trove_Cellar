@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { MonoLabel } from '@/components/ui/MonoLabel';
 import { TastingNoteCard } from '@/components/TastingNoteCard';
 import { StarRating } from '@/components/StarRating';
 import { RecommendationRow } from '@/components/RecommendationRow';
+import { DiaryFilterBar, type DiaryFilters } from '@/components/DiaryFilterBar';
 import { colors } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
 import { useTastings } from '@/stores/tastings';
@@ -24,6 +25,37 @@ export default function DiaryScreen() {
   const tastings = useTastings((s) => s.tastings);
   const ownedIds = useMemo(() => new Set(tastings.map((t) => t.bottleId)), [tastings]);
   const recs = useMemo(() => recommendNext(tastings, ownedIds, 3), [tastings, ownedIds]);
+
+  const [filters, setFilters] = useState<DiaryFilters>({ query: '', region: null, minStars: 0 });
+
+  const regionsInDiary = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of tastings) {
+      const b = BOTTLES_SEED.find((x) => x.id === t.bottleId);
+      if (b) set.add(b.region);
+    }
+    return [...set];
+  }, [tastings]);
+
+  const filteredTastings = useMemo(() => {
+    const q = filters.query.trim().toLowerCase();
+    return tastings.filter((t) => {
+      const b = BOTTLES_SEED.find((x) => x.id === t.bottleId);
+      const d = b && DISTILLERIES_SEED.find((x) => x.slug === b.distillerySlug);
+      if (!b || !d) return false;
+
+      if (filters.region && b.region !== filters.region) return false;
+      if (filters.minStars > 0 && (t.ratingStars ?? 0) < filters.minStars) return false;
+
+      if (q) {
+        const haystack = `${d.name} ${d.nameKo} ${b.fullName} ${t.nose ?? ''} ${t.palate ?? ''} ${t.finish ?? ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [tastings, filters]);
+
+  const hasFilters = filters.query.length > 0 || filters.region !== null || filters.minStars > 0;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
@@ -150,21 +182,44 @@ export default function DiaryScreen() {
               your notes
             </Text>
           </View>
-          <MonoLabel size={10} tracking={1.5}>{`${tastings.length} · entries`}</MonoLabel>
+          <MonoLabel size={10} tracking={1.5}>
+            {hasFilters && filteredTastings.length !== tastings.length
+              ? `${filteredTastings.length} / ${tastings.length}`
+              : `${tastings.length} · entries`}
+          </MonoLabel>
         </View>
 
         {tastings.length === 0 ? (
           <EmptyState />
         ) : (
-          <View style={{ gap: 14 }}>
-            {tastings.map((t) => (
-              <TastingListRow
-                key={t.id}
-                tasting={t}
-                onPress={() => router.push(`/tasting/${t.id}`)}
-              />
-            ))}
-          </View>
+          <>
+            {tastings.length >= 3 && (
+              <View style={{ marginBottom: 18 }}>
+                <DiaryFilterBar
+                  filters={filters}
+                  onChange={setFilters}
+                  regions={regionsInDiary}
+                />
+              </View>
+            )}
+            {filteredTastings.length === 0 ? (
+              <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                <Text variant="serifKr" tone="inkMuted" style={{ fontSize: 14, lineHeight: 22, textAlign: 'center' }}>
+                  {`조건에 맞는 노트가 없습니다.\n필터를 조정해보세요.`}
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 14 }}>
+                {filteredTastings.map((t) => (
+                  <TastingListRow
+                    key={t.id}
+                    tasting={t}
+                    onPress={() => router.push(`/tasting/${t.id}`)}
+                  />
+                ))}
+              </View>
+            )}
+          </>
         )}
 
         {/* Recommendations */}

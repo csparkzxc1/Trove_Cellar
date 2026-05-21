@@ -21,22 +21,30 @@ import { BOTTLES_SEED } from '@/constants/bottles-seed';
 import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
 import { colors } from '@/constants/tokens';
 import { useTastings } from '@/stores/tastings';
+import { useWishlist } from '@/stores/wishlist';
 import { identifyLabel, isOcrConfigured } from '@/lib/labelOcr';
 import type { Bottle } from '@/lib/types';
 
 export default function TastingComposerScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ bottleId?: string }>();
+  const params = useLocalSearchParams<{ bottleId?: string; edit?: string }>();
   const addTasting = useTastings((s) => s.add);
+  const updateTasting = useTastings((s) => s.update);
+  const existing = useTastings((s) => (params.edit ? s.tastings.find((t) => t.id === params.edit) : undefined));
+  const removeFromWishlist = useWishlist((s) => s.remove);
+  const isOnWishlist = useWishlist((s) => s.has);
+
+  const isEditMode = !!existing;
+  const initialBottleId = existing?.bottleId ?? params.bottleId;
 
   const [bottle, setBottle] = useState<Bottle | undefined>(
-    params.bottleId ? BOTTLES_SEED.find((b) => b.id === params.bottleId) : undefined
+    initialBottleId ? BOTTLES_SEED.find((b) => b.id === initialBottleId) : undefined
   );
-  const [nose, setNose] = useState('');
-  const [palate, setPalate] = useState('');
-  const [finish, setFinish] = useState('');
-  const [stars, setStars] = useState(0);
-  const [setting, setSetting] = useState('');
+  const [nose, setNose] = useState(existing?.nose ?? '');
+  const [palate, setPalate] = useState(existing?.palate ?? '');
+  const [finish, setFinish] = useState(existing?.finish ?? '');
+  const [stars, setStars] = useState(existing?.ratingStars ?? 0);
+  const [setting, setSetting] = useState(existing?.setting ?? '');
   const [ocrLoading, setOcrLoading] = useState(false);
 
   const distillery = useMemo(
@@ -99,15 +107,35 @@ export default function TastingComposerScreen() {
 
   const onSave = () => {
     if (!bottle) return;
-    const t = addTasting({
-      bottleId: bottle.id,
-      tastedAt: new Date().toISOString(),
+    const fields = {
       nose: nose.trim() || undefined,
       palate: palate.trim() || undefined,
       finish: finish.trim() || undefined,
       ratingStars: stars || undefined,
       setting: setting.trim() || undefined,
+    };
+
+    if (isEditMode && existing) {
+      updateTasting(existing.id, { ...fields, bottleId: bottle.id });
+      router.replace(`/tasting/${existing.id}`);
+      return;
+    }
+
+    const t = addTasting({
+      bottleId: bottle.id,
+      tastedAt: new Date().toISOString(),
+      ...fields,
     });
+
+    // If the user had this bottle on their wishlist, drop it: they've now
+    // tasted it. Let them know with a soft confirmation.
+    if (isOnWishlist(bottle.id)) {
+      removeFromWishlist(bottle.id);
+      Alert.alert('위시리스트에서 정리했습니다', '한 잔을 마셨으니 더 이상 기다리지 않아요.', [
+        { text: '확인' },
+      ]);
+    }
+
     router.replace(`/tasting/${t.id}`);
   };
 
@@ -128,17 +156,17 @@ export default function TastingComposerScreen() {
                 ← Cancel
               </Text>
             </Pressable>
-            <MonoLabel size={9} tracking={2.5}>new tasting</MonoLabel>
+            <MonoLabel size={9} tracking={2.5}>{isEditMode ? 'edit tasting' : 'new tasting'}</MonoLabel>
           </View>
 
           {/* Title */}
           <View style={{ marginBottom: 24, alignItems: 'center' }}>
             <Text variant="serifKr" tone="parchment" style={{ fontSize: 24, lineHeight: 34, textAlign: 'center' }}>
-              오늘의 한 잔
+              {isEditMode ? '노트 다듬기' : '오늘의 한 잔'}
             </Text>
             <View style={{ marginTop: 6 }}>
               <Text variant="displayEnItalic" tone="brassLight" style={{ fontSize: 15 }}>
-                One pour, one memory.
+                {isEditMode ? 'Refine the note.' : 'One pour, one memory.'}
               </Text>
             </View>
           </View>
@@ -281,11 +309,11 @@ export default function TastingComposerScreen() {
                 tone="bourbon"
                 style={{ fontSize: 13, letterSpacing: 3.5, textTransform: 'uppercase' }}
               >
-                한 잔의 기록 보관
+                {isEditMode ? '노트 갱신' : '한 잔의 기록 보관'}
               </Text>
               <View style={{ marginTop: 3 }}>
                 <Text variant="displayEnItalic" tone="amberDeep" style={{ fontSize: 11, opacity: 0.85 }}>
-                  Save tasting
+                  {isEditMode ? 'Update note' : 'Save tasting'}
                 </Text>
               </View>
             </Pressable>

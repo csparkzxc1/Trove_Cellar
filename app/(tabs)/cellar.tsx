@@ -20,18 +20,35 @@ export default function CellarScreen() {
   const tastings = useTastings((s) => s.tastings);
 
   const ownedIds = new Set(tastings.map((t) => t.bottleId));
-  const ownedBottles = BOTTLES_SEED.filter((b) => ownedIds.has(b.id));
+
+  // Top-rated tasting per bottle (a user can have multiple tastings of one bottle).
+  const bestStarsByBottle = new Map<string, number>();
+  for (const t of tastings) {
+    const stars = t.ratingStars ?? 0;
+    const prev = bestStarsByBottle.get(t.bottleId) ?? 0;
+    if (stars > prev) bestStarsByBottle.set(t.bottleId, stars);
+  }
+
+  // Owned bottles sorted by best rating (desc), then alpha by name
+  const ownedBottles = BOTTLES_SEED.filter((b) => ownedIds.has(b.id)).sort((a, b) => {
+    const ra = bestStarsByBottle.get(a.id) ?? 0;
+    const rb = bestStarsByBottle.get(b.id) ?? 0;
+    if (ra !== rb) return rb - ra;
+    return a.fullName.localeCompare(b.fullName);
+  });
+
   const totalRating =
     tastings.reduce((acc, t) => acc + (t.ratingStars ?? 0), 0) /
     Math.max(1, tastings.filter((t) => (t.ratingStars ?? 0) > 0).length);
   const estValue = ownedBottles.reduce((acc, b) => acc + (b.msrpKrw ?? 0), 0);
 
-  // Show owned bottles first (lit), then the rest of the seed catalog (wishlist).
+  // Lit owned bottles first, then unowned. Top-rated owned bottle is featured.
   const bottlesInOrder = [
     ...ownedBottles,
     ...BOTTLES_SEED.filter((b) => !ownedIds.has(b.id)),
   ];
   const total = bottlesInOrder.length;
+  const featuredId = ownedBottles[0]?.id ?? null;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
@@ -123,7 +140,7 @@ export default function CellarScreen() {
         <CabinetView
           bottles={bottlesInOrder}
           ownedIds={ownedIds}
-          featuredId={ownedBottles[0]?.id ?? null}
+          featuredId={featuredId}
           perShelf={4}
           onBottlePress={(b) => router.push(`/bottle/${b.id}`)}
         />

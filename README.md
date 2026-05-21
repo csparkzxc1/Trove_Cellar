@@ -122,13 +122,21 @@ EXPO_PUBLIC_ANTHROPIC_API_KEY=<key>
 - [x] **Profile 폴리시** — 6칸 통계 (Tastings · Bottles · Avg. ★ · Est. Value · Wishlist · Since), PDF Catalog 액션, "Leave the cellar" with confirm
 - [x] **import.meta babel 플러그인** — Zustand devtools의 `import.meta.env` 참조를 Metro 번들에서 syntax-safe하게 치환 (`babel-plugin-strip-import-meta.js`)
 
-## Phase 3 (next)
+## Phase 3 — quality-of-life features (this session)
 
-- 가격 추적 (한국 면세점 시세)
+- [x] **시음 노트 편집** — composer를 `?edit=<id>` 모드로 재사용, 기존 값 prefill + "노트 갱신" CTA, tasting 상세에 "노트 다듬기 · Edit" 액션
+- [x] **Diary 검색 + 필터** — `components/DiaryFilterBar.tsx`: 검색바(증류소/노트 내용) + region chips(diary에 있는 지역만) + ★0/3/4/5 rating chips. 3개 이상의 노트가 있어야 노출. 필터 적용 시 헤더에 `2 / 3` 카운트
+- [x] **시음 인사이트 (Profile)** — `lib/insights.ts` + `components/InsightsPanel.tsx`: Region 상위 3개 stacked bar + Cask 상위 3개 + 월별 시음 빈도 6개월 막대
+- [x] **시음 → 위시리스트 자동 정리** — 시음 저장 시 해당 bottle이 위시리스트에 있으면 자동 제거 + "위시리스트에서 정리했습니다 · 한 잔을 마셨으니 더 이상 기다리지 않아요." alert
+- [x] **셀러 정렬 강화** — 보유 위스키를 best 별점 순으로 정렬, top-rated 위스키가 자동으로 featured(밝은 핀조명 + 펄스)
+
+## Phase 4 (next)
+
 - Supabase 실 wiring + auth 마이그레이션 (스키마는 준비됨)
-- 시음 노트 편집 (현재는 삭제만)
+- 가격 추적 (한국 면세점 시세 API)
 - 친구 셀러 비교 / public sharing
 - 한국 전통주/사케 확장
+- iPhone/Android 빌드 + TestFlight/Play Console 배포
 
 ---
 

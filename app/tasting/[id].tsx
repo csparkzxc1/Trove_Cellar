@@ -129,6 +129,21 @@ export default function TastingDetailScreen() {
               </Text>
             </View>
           </Pressable>
+
+          <Pressable
+            onPress={() => router.push(`/tasting/new?edit=${tasting.id}`)}
+            style={({ pressed }) => ({
+              paddingVertical: 13,
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: pressed ? colors.brass : colors.line,
+              borderRadius: 2,
+            })}
+          >
+            <Text variant="mono" tone="inkMuted" upper tracking={2.5} style={{ fontSize: 10 }}>
+              노트 다듬기 · Edit
+            </Text>
+          </Pressable>
         </View>
 
         {tasting.setting && (
