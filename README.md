@@ -111,14 +111,24 @@ EXPO_PUBLIC_ANTHROPIC_API_KEY=<key>
 - [x] **Cellar tab 연동** — 시음한 위스키는 owned로 진열(밝은 핀조명), MSRP 합산 → Est. Value, 평균 별점 → Avg. Score
 - [x] **BottlePicker** 컴포넌트 — composer 안 horizontal scroll selector
 
-## Phase 2 (next)
+## Phase 2 — extended features (this session)
 
-- 카메라 권한 + expo-image-picker 실 연동 → Vision API
-- PDF 셀러 카탈로그 export
+- [x] **AsyncStorage persistence** — Zustand `persist` middleware for tastings, wishlist, and auth stores. App restart restores all state
+- [x] **Wishlist 실 동작** — `stores/wishlist.ts` + 위시리스트 탭 리스트 UI(병 SVG + 메타 + ₩MSRP + × 삭제) + 위스키 상세 "+ Save to wishlist" 토글(저장 시 ✓ ON WISHLIST brass로 표시)
+- [x] **카메라 실 wiring** — `expo-image-picker` 권한 + 카메라/보관함 선택 UI, 식별 결과를 자동으로 BottlePicker에 반영
+- [x] **Claude Vision OCR 실 호출** — `lib/labelOcr.ts`가 `EXPO_PUBLIC_ANTHROPIC_API_KEY` 있을 때 `claude-opus-4-7` 호출, 구조화된 JSON 응답을 시드 카탈로그와 매칭
+- [x] **위스키 추천 (`lib/recommendations.ts`)** — 사용자 시음 region/cask/style 패턴을 별점으로 가중치 부여, Diary에 horizontal scroll로 노출 ("Speyside · Sherry 취향과 잘 맞습니다")
+- [x] **PDF 카탈로그 export** — `expo-print` + `expo-sharing`으로 양피지 톤 그대로의 HTML→PDF 생성, Profile 탭에서 실행
+- [x] **Profile 폴리시** — 6칸 통계 (Tastings · Bottles · Avg. ★ · Est. Value · Wishlist · Since), PDF Catalog 액션, "Leave the cellar" with confirm
+- [x] **import.meta babel 플러그인** — Zustand devtools의 `import.meta.env` 참조를 Metro 번들에서 syntax-safe하게 치환 (`babel-plugin-strip-import-meta.js`)
+
+## Phase 3 (next)
+
 - 가격 추적 (한국 면세점 시세)
-- 위스키 추천 (보유 패턴 기반)
-- AsyncStorage hydration (앱 재시작 시 노트 복원)
-- Supabase 실 wiring + auth 마이그레이션
+- Supabase 실 wiring + auth 마이그레이션 (스키마는 준비됨)
+- 시음 노트 편집 (현재는 삭제만)
+- 친구 셀러 비교 / public sharing
+- 한국 전통주/사케 확장
 
 ---
 

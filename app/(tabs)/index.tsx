@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -7,11 +8,13 @@ import { Text } from '@/components/ui/Text';
 import { MonoLabel } from '@/components/ui/MonoLabel';
 import { TastingNoteCard } from '@/components/TastingNoteCard';
 import { StarRating } from '@/components/StarRating';
+import { RecommendationRow } from '@/components/RecommendationRow';
 import { colors } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
 import { useTastings } from '@/stores/tastings';
 import { BOTTLES_SEED } from '@/constants/bottles-seed';
 import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
+import { recommendNext } from '@/lib/recommendations';
 import type { Tasting } from '@/lib/types';
 
 export default function DiaryScreen() {
@@ -19,6 +22,8 @@ export default function DiaryScreen() {
   const session = useAuth((s) => s.session);
   const cask = session?.caskNumber ?? 'CASK 001';
   const tastings = useTastings((s) => s.tastings);
+  const ownedIds = useMemo(() => new Set(tastings.map((t) => t.bottleId)), [tastings]);
+  const recs = useMemo(() => recommendNext(tastings, ownedIds, 3), [tastings, ownedIds]);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
@@ -159,6 +164,13 @@ export default function DiaryScreen() {
                 onPress={() => router.push(`/tasting/${t.id}`)}
               />
             ))}
+          </View>
+        )}
+
+        {/* Recommendations */}
+        {recs.length > 0 && (
+          <View style={{ marginTop: 44 }}>
+            <RecommendationRow items={recs} />
           </View>
         )}
 

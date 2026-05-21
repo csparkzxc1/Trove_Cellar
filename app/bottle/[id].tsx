@@ -13,6 +13,7 @@ import { BOTTLES_SEED } from '@/constants/bottles-seed';
 import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
 import { colors } from '@/constants/tokens';
 import { useTastings } from '@/stores/tastings';
+import { useWishlist } from '@/stores/wishlist';
 
 export default function BottleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,6 +26,8 @@ export default function BottleDetailScreen() {
   );
   const tastings = useTastings((s) => (id ? s.byBottle(id) : []));
   const latest = tastings[0];
+  const onWishlist = useWishlist((s) => (id ? s.has(id) : false));
+  const toggleWishlist = useWishlist((s) => s.toggle);
 
   if (!bottle || !distillery) {
     return (
@@ -239,6 +242,7 @@ export default function BottleDetailScreen() {
             </Text>
           </Pressable>
           <Pressable
+            onPress={() => toggleWishlist(bottle.id)}
             style={({ pressed }) => ({
               paddingVertical: 10,
               alignItems: 'center',
@@ -247,12 +251,12 @@ export default function BottleDetailScreen() {
           >
             <Text
               variant="mono"
-              tone="inkDeep"
+              tone={onWishlist ? 'brass' : 'inkDeep'}
               upper
               tracking={2.5}
               style={{ fontSize: 9 }}
             >
-              + Save to wishlist
+              {onWishlist ? '✓ On wishlist' : '+ Save to wishlist'}
             </Text>
           </Pressable>
         </View>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/ui/Text';
 import { MonoLabel } from '@/components/ui/MonoLabel';
 import { Divider } from '@/components/ui/Divider';
@@ -48,7 +49,48 @@ export default function TastingComposerScreen() {
   const onScan = async () => {
     setOcrLoading(true);
     try {
-      const guess = await identifyLabel('camera://stub');
+      let uri = 'camera://stub';
+      // Use the actual camera/library only when running on a native device.
+      if (Platform.OS !== 'web') {
+        const useCamera = await new Promise<'camera' | 'library' | null>((resolve) => {
+          Alert.alert('라벨 사진', '어떻게 추가할까요?', [
+            { text: '취소', style: 'cancel', onPress: () => resolve(null) },
+            { text: '사진 보관함', onPress: () => resolve('library') },
+            { text: '카메라', onPress: () => resolve('camera') },
+          ]);
+        });
+        if (!useCamera) return;
+
+        if (useCamera === 'camera') {
+          const perm = await ImagePicker.requestCameraPermissionsAsync();
+          if (!perm.granted) {
+            Alert.alert('권한 필요', '카메라 권한이 필요합니다.');
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ['images'],
+            quality: 0.8,
+            allowsEditing: false,
+          });
+          if (result.canceled) return;
+          uri = result.assets[0]?.uri ?? uri;
+        } else {
+          const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (!perm.granted) {
+            Alert.alert('권한 필요', '사진 보관함 권한이 필요합니다.');
+            return;
+          }
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            quality: 0.8,
+            allowsEditing: false,
+          });
+          if (result.canceled) return;
+          uri = result.assets[0]?.uri ?? uri;
+        }
+      }
+
+      const guess = await identifyLabel(uri);
       setBottle(guess.bottle);
     } finally {
       setOcrLoading(false);

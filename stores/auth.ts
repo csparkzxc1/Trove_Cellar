@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Session = {
   userId: string;
@@ -13,24 +15,32 @@ type AuthState = {
   signOut: () => void;
 };
 
-// In-session demo auth (Phase 1). Supabase auth wires in Phase 2.
-export const useAuth = create<AuthState>((set) => ({
-  session: null,
-  signIn: (email) =>
-    set({
-      session: {
-        userId: 'demo-user',
-        email,
-        caskNumber: 'CASK 001',
-      },
+// Persisted demo auth — survives app restart. Phase 2 swaps to Supabase auth.
+export const useAuth = create<AuthState>()(
+  persist(
+    (set) => ({
+      session: null,
+      signIn: (email) =>
+        set({
+          session: {
+            userId: 'demo-user',
+            email,
+            caskNumber: 'CASK 001',
+          },
+        }),
+      signUp: (email) =>
+        set({
+          session: {
+            userId: 'demo-user',
+            email,
+            caskNumber: 'CASK 001',
+          },
+        }),
+      signOut: () => set({ session: null }),
     }),
-  signUp: (email) =>
-    set({
-      session: {
-        userId: 'demo-user',
-        email,
-        caskNumber: 'CASK 001',
-      },
-    }),
-  signOut: () => set({ session: null }),
-}));
+    {
+      name: 'trove-cellar:auth',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
