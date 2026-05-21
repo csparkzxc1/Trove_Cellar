@@ -6,19 +6,23 @@ import { WaxStamp } from './WaxStamp';
 import { colors } from '@/constants/tokens';
 
 type Props = {
-  number?: string;             // "01"
+  number?: string;             // "01" — note no.
   region?: string;             // "Speyside"
   distillery: string;          // "Glenfiddich"
-  expression?: string;         // "Our Original Twelve, aged eighteen"
+  expression?: string;
   age?: number;                // 18 → drives the wax stamp
   nose?: string;
   palate?: string;
   finish?: string;
-  cask?: string;               // "Sherry"
-  abv?: number | string;       // 40 → "40%"
-  ratingStars?: number;        // 1-5, default 0
+  cask?: string;
+  abv?: number | string;
+  ratingStars?: number;        // 0-5
   acquiredAt?: string;         // "2026.05.21"
-  placeholder?: boolean;       // true → empty-state copy
+
+  // === Empty-state variants ===
+  // 'detail'     — bottle detail page: "아직 노트가 없습니다. 첫 잔을 기다리는 중."
+  // 'invitation' — diary main: warm template-like preview inviting first tasting
+  placeholder?: 'detail' | 'invitation';
 };
 
 const renderStars = (n: number) => {
@@ -40,8 +44,10 @@ export function TastingNoteCard({
   abv,
   ratingStars = 0,
   acquiredAt,
-  placeholder = false,
+  placeholder,
 }: Props) {
+  const isInvitation = placeholder === 'invitation';
+
   return (
     <View
       style={{
@@ -54,13 +60,13 @@ export function TastingNoteCard({
         borderColor: colors.parchmentAged,
         position: 'relative',
         shadowColor: '#000',
-        shadowOpacity: 0.4,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: 20 },
-        elevation: 8,
+        shadowOpacity: 0.45,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 18 },
+        elevation: 10,
       }}
     >
-      {/* Inner border — matches .tasting::before inset 8px */}
+      {/* Inner border */}
       <View
         pointerEvents="none"
         style={{
@@ -75,39 +81,44 @@ export function TastingNoteCard({
         }}
       />
 
-      {/* Wax stamp — top right, only when age is provided */}
-      {age != null && (
+      {/* Wax stamp — top right */}
+      {(age != null || isInvitation) && (
         <View style={{ position: 'absolute', top: 16, right: 18 }}>
-          <WaxStamp age={age} />
+          <WaxStamp
+            age={isInvitation ? '?' : (age as number)}
+            label={isInvitation ? 'AWAIT' : 'YEARS'}
+          />
         </View>
       )}
 
       {/* Label tag */}
       <MonoLabel size={9} tracking={2.7} tone="amberDeep">
-        {`Distillery №${number}${region ? ' · ' + region : ''}`}
+        {isInvitation
+          ? 'Distillery №— · awaiting'
+          : `Distillery №${number}${region ? ' · ' + region : ''}`}
       </MonoLabel>
 
-      {/* Distillery + expression */}
+      {/* Distillery */}
       <Text
         variant="displayEnBold"
         tone="bourbon"
         style={{ fontSize: 26, lineHeight: 29, marginTop: 8, letterSpacing: 0.3 }}
       >
-        {distillery}
+        {isInvitation ? '당신의 첫 한 잔' : distillery}
       </Text>
-      {expression && (
+      {(expression || isInvitation) && (
         <Text
           variant="displayEnItalic"
           tone="amberDeep"
           style={{ fontSize: 17, lineHeight: 22, marginTop: 4, letterSpacing: 0.1 }}
         >
-          {expression}
+          {isInvitation ? 'A tasting waiting to be written.' : expression}
         </Text>
       )}
 
       <Divider diamond tone="parchment" />
 
-      {placeholder ? (
+      {placeholder === 'detail' ? (
         <View style={{ paddingVertical: 12, alignItems: 'center' }}>
           <Text
             variant="serifKr"
@@ -117,6 +128,12 @@ export function TastingNoteCard({
             아직 노트가 없습니다.{'\n'}첫 잔을 기다리는 중.
           </Text>
         </View>
+      ) : isInvitation ? (
+        <>
+          <InvitationBlock label="Nose · 향"     hint="첫 향을 한 줄로 남겨주세요." />
+          <InvitationBlock label="Palate · 맛"   hint="혀에 닿은 인상을 적어주세요." />
+          <InvitationBlock label="Finish · 피니쉬" hint="남은 여운을 기록해주세요." />
+        </>
       ) : (
         <>
           {nose && <NoteBlock label="Nose · 향" body={nose} />}
@@ -126,7 +143,7 @@ export function TastingNoteCard({
       )}
 
       {/* Meta grid */}
-      {(region || cask || abv != null) && (
+      {(region || cask || abv != null || isInvitation) && (
         <View
           style={{
             marginTop: 18,
@@ -136,24 +153,39 @@ export function TastingNoteCard({
             flexDirection: 'row',
           }}
         >
-          {region && <MetaCell label="Region" value={region} />}
-          {cask && <MetaCell label="Cask" value={cask} />}
-          {abv != null && <MetaCell label="ABV" value={typeof abv === 'number' ? `${abv}%` : abv} />}
+          <MetaCell label="Region" value={isInvitation ? '—' : (region ?? '—')} dim={isInvitation} />
+          <MetaCell label="Cask"   value={isInvitation ? '—' : (cask ?? '—')}   dim={isInvitation} />
+          <MetaCell
+            label="ABV"
+            value={
+              isInvitation
+                ? '—'
+                : abv != null
+                  ? typeof abv === 'number' ? `${abv}%` : abv
+                  : '—'
+            }
+            dim={isInvitation}
+          />
         </View>
       )}
 
-      {/* Footer — rating + date */}
+      {/* Footer */}
       <View style={{ marginTop: 22, alignItems: 'center' }}>
         <Text
           variant="displayEn"
           tone="amberDeep"
-          style={{ fontSize: 14, letterSpacing: 3, marginBottom: 6 }}
+          style={{
+            fontSize: 14,
+            letterSpacing: 3,
+            marginBottom: 6,
+            opacity: isInvitation ? 0.3 : 1,
+          }}
         >
           {renderStars(ratingStars)}
         </Text>
-        {acquiredAt && (
+        {(acquiredAt || isInvitation) && (
           <MonoLabel size={8} tracking={1.8} tone="inkDeep">
-            {`Acquired · ${acquiredAt}`}
+            {isInvitation ? 'Awaiting your first pour' : `Acquired · ${acquiredAt}`}
           </MonoLabel>
         )}
       </View>
@@ -176,9 +208,37 @@ function NoteBlock({ label, body }: { label: string; body: string }) {
   );
 }
 
-function MetaCell({ label, value }: { label: string; value: string }) {
+function InvitationBlock({ label, hint }: { label: string; hint: string }) {
   return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
+    <View style={{ marginBottom: 12 }}>
+      <MonoLabel size={8} tracking={2.7} tone="amberDeep">{label}</MonoLabel>
+      <View
+        style={{
+          marginTop: 6,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          borderRadius: 1,
+          borderWidth: 1,
+          borderColor: 'rgba(142, 74, 14, 0.18)',
+          borderStyle: 'dashed',
+          backgroundColor: 'rgba(184, 149, 78, 0.06)',
+        }}
+      >
+        <Text
+          variant="serifKrBold"
+          tone="bourbon"
+          style={{ fontSize: 12, lineHeight: 20, opacity: 0.55, fontStyle: 'italic' }}
+        >
+          {hint}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function MetaCell({ label, value, dim }: { label: string; value: string; dim?: boolean }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', opacity: dim ? 0.4 : 1 }}>
       <MonoLabel size={7} tracking={1.9} tone="amberDeep">{label}</MonoLabel>
       <Text
         variant="displayEn"

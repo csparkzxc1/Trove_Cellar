@@ -142,30 +142,44 @@ export default function BottleDetailScreen() {
           age={bottle.ageYears}
           cask={bottle.caskType}
           abv={bottle.abv}
-          placeholder
+          placeholder="detail"
         />
 
-        {/* Actions */}
+        {/* Actions — tasting is primary; cellar is a side effect */}
         <View style={{ marginTop: 28, gap: 12 }}>
           <Pressable
             style={({ pressed }) => ({
-              paddingVertical: 14,
+              paddingVertical: 16,
               alignItems: 'center',
               backgroundColor: pressed ? colors.amberDeep : colors.brass,
               borderRadius: 2,
+              shadowColor: '#C8761F',
+              shadowOpacity: 0.3,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 4,
             })}
           >
             <Text
               variant="displayEn"
               tone="bourbon"
-              style={{ fontSize: 13, letterSpacing: 3, textTransform: 'uppercase' }}
+              style={{ fontSize: 13, letterSpacing: 3.5, textTransform: 'uppercase' }}
             >
-              Add to cellar
+              시음 노트 남기기
             </Text>
+            <View style={{ marginTop: 3 }}>
+              <Text
+                variant="displayEnItalic"
+                tone="amberDeep"
+                style={{ fontSize: 11, opacity: 0.85 }}
+              >
+                Record a tasting
+              </Text>
+            </View>
           </Pressable>
           <Pressable
             style={({ pressed }) => ({
-              paddingVertical: 12,
+              paddingVertical: 13,
               alignItems: 'center',
               borderWidth: 1,
               borderColor: pressed ? colors.brass : colors.line,
@@ -179,7 +193,24 @@ export default function BottleDetailScreen() {
               tracking={2.5}
               style={{ fontSize: 10 }}
             >
-              Save to wishlist
+              Add to cellar
+            </Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => ({
+              paddingVertical: 10,
+              alignItems: 'center',
+              opacity: pressed ? 0.5 : 1,
+            })}
+          >
+            <Text
+              variant="mono"
+              tone="inkDeep"
+              upper
+              tracking={2.5}
+              style={{ fontSize: 9 }}
+            >
+              + Save to wishlist
             </Text>
           </Pressable>
         </View>

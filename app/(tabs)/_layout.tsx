@@ -6,8 +6,8 @@ import { useAuth } from '@/stores/auth';
 import { colors } from '@/constants/tokens';
 
 const labels: Record<string, string> = {
-  index: 'Cellar',
-  add: 'Add',
+  index: 'Diary',
+  cellar: 'Cellar',
   wishlist: 'Wishlist',
   profile: 'Profile',
 };
@@ -61,7 +61,7 @@ export default function TabsLayout() {
       })}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="add" />
+      <Tabs.Screen name="cellar" />
       <Tabs.Screen name="wishlist" />
       <Tabs.Screen name="profile" />
     </Tabs>

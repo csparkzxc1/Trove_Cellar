@@ -1,11 +1,13 @@
 # Trove Cellar
 
-> **당신의 한 잔이 기록이 되는 곳.**
-> Where every dram becomes a memory.
+> **오늘 한 잔의 기록을 남겨주세요.**
+> One dram, one memory.
 
-위스키 컬렉터를 위한 **개인 셀러 + 시음 노트 도감**.
+위스키 매니아를 위한 **시음 일기 + 양피지 도감**.
 
-핀조명이 켜진 가상 캐비넷에 보유한 위스키를 진열하고, 한국어 시음 노트(Nose · Palate · Finish)로 한 잔의 기억을 기록한다. 트로브 가족(Trove Peaks 박물관 도감 · Trove Cafe 스크랩북 다이어리)의 다크 모드 + 가장 atmospheric한 톤.
+한 잔을 따를 때마다 한국어 시음 노트(Nose · Palate · Finish)를 양피지 카드 한 장에 남긴다. 셀러는 그 부산물 — 진열된 병들은 마신 잔의 기억을 모은 결과다. 트로브 가족(Trove Peaks 박물관 도감 · Trove Cafe 스크랩북 다이어리)의 다크 모드 + 가장 atmospheric한 톤.
+
+**핵심 단위**: 한 병이 아닌 **한 잔(tasting)**. 메인 탭은 시음일기, 셀러는 두 번째 탭의 보조 기능.
 
 ## Stack
 
@@ -41,7 +43,7 @@ source of truth: [`docs/trove-cellar-prototype.html`](docs/trove-cellar-prototyp
 ```
 app/
   (auth)/login.tsx · signup.tsx
-  (tabs)/index.tsx (셀러) · add.tsx · wishlist.tsx · profile.tsx
+  (tabs)/index.tsx (시음일기 · default) · cellar.tsx · wishlist.tsx · profile.tsx
   bottle/[id].tsx
 components/
   ui/             Text, Card, Divider, MonoLabel
@@ -84,8 +86,10 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 - [x] 핀조명 SVG + LinearGradient 구현 비교
 - [x] BottleCard · ShelfRow · CabinetView
 - [x] StatsBar · TastingNoteCard · WaxStamp · BrandWordmark · Crest
-- [x] auth 분기 + 4 탭 + 위스키 상세 + 위시리스트 placeholder
-- [x] Web export 검증 (15 라우트)
+- [x] auth 분기 + 4 탭(시음일기 / 셀러 / 위시리스트 / 프로필) + 위스키 상세 + 위시리스트 placeholder
+- [x] **시음 노트 메인 화면** — invitation 양피지 카드(왁스 씰 "?", 점선 NOSE/PALATE/FINISH 박스, 한글 invitation 카피) + brass primary CTA "시음 노트 남기기"
+- [x] 위스키 상세 액션 우선순위: 시음 노트 남기기 > 셀러에 추가 > 위시리스트
+- [x] Web export 검증
 
 ## Phase 2 (next)
 
