@@ -9,6 +9,7 @@ import { CabinetView } from '@/components/CabinetView';
 import { BOTTLES_SEED } from '@/constants/bottles-seed';
 import { colors } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
+import { useTastings } from '@/stores/tastings';
 
 // Cellar — secondary surface. The diary (tab 1) is the primary experience;
 // the cabinet here is collection support: see what you have, what's coming.
@@ -16,9 +17,21 @@ export default function CellarScreen() {
   const router = useRouter();
   const session = useAuth((s) => s.session);
   const cask = session?.caskNumber ?? 'CASK 001';
+  const tastings = useTastings((s) => s.tastings);
 
-  const ownedIds = new Set<string>();
-  const total = BOTTLES_SEED.length;
+  const ownedIds = new Set(tastings.map((t) => t.bottleId));
+  const ownedBottles = BOTTLES_SEED.filter((b) => ownedIds.has(b.id));
+  const totalRating =
+    tastings.reduce((acc, t) => acc + (t.ratingStars ?? 0), 0) /
+    Math.max(1, tastings.filter((t) => (t.ratingStars ?? 0) > 0).length);
+  const estValue = ownedBottles.reduce((acc, b) => acc + (b.msrpKrw ?? 0), 0);
+
+  // Show owned bottles first (lit), then the rest of the seed catalog (wishlist).
+  const bottlesInOrder = [
+    ...ownedBottles,
+    ...BOTTLES_SEED.filter((b) => !ownedIds.has(b.id)),
+  ];
+  const total = bottlesInOrder.length;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
@@ -65,9 +78,18 @@ export default function CellarScreen() {
         <View style={{ marginBottom: 36 }}>
           <StatsBar
             stats={[
-              { key: 'Bottles', value: '0' },
-              { key: 'Est. Value', value: '—', prefix: '₩' },
-              { key: 'Avg. Score', value: '—' },
+              { key: 'Bottles', value: String(ownedBottles.length) },
+              {
+                key: 'Est. Value',
+                value: estValue > 0 ? formatValue(estValue).num : '—',
+                suffix: estValue > 0 ? formatValue(estValue).unit : undefined,
+                prefix: '₩',
+              },
+              {
+                key: 'Avg. Score',
+                value: Number.isFinite(totalRating) && totalRating > 0 ? totalRating.toFixed(1) : '—',
+                suffix: Number.isFinite(totalRating) && totalRating > 0 ? '/5' : undefined,
+              },
             ]}
           />
         </View>
@@ -99,13 +121,19 @@ export default function CellarScreen() {
         </View>
 
         <CabinetView
-          bottles={BOTTLES_SEED}
+          bottles={bottlesInOrder}
           ownedIds={ownedIds}
-          featuredId={null}
+          featuredId={ownedBottles[0]?.id ?? null}
           perShelf={4}
           onBottlePress={(b) => router.push(`/bottle/${b.id}`)}
         />
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function formatValue(n: number): { num: string; unit?: string } {
+  if (n >= 1_000_000) return { num: (n / 1_000_000).toFixed(1), unit: 'M' };
+  if (n >= 10_000) return { num: String(Math.round(n / 10_000)), unit: '만' };
+  return { num: n.toLocaleString('ko-KR') };
 }

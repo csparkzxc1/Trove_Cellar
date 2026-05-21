@@ -56,18 +56,15 @@ stores/           auth (Zustand)
 docs/             trove-cellar-prototype.html (visual spec)
 ```
 
-## Supabase (Phase 2)
+## Supabase
 
-이번 세션은 `@supabase/supabase-js` 클라이언트와 placeholder 환경변수만 셋업되어 있다. 실 데이터는 `BOTTLES_SEED` (12 위스키 × 10 증류소) 직접 사용.
+스키마 + RLS + 시드: [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) · [`supabase/seed.sql`](supabase/seed.sql)
 
-스키마 초안 (Phase 2 적용 예정):
-
-```sql
-create table distilleries ( ... );
-create table bottles      ( ... );
-create table user_bottles ( ... );
-create table tastings     ( ... );
-create table wishlist     ( ... );
+```bash
+# Apply to a Supabase project
+supabase link --project-ref <ref>
+supabase db push                # runs 0001_init.sql
+psql $DATABASE_URL -f supabase/seed.sql
 ```
 
 활성화하려면 `.env`에:
@@ -76,6 +73,18 @@ create table wishlist     ( ... );
 EXPO_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
+
+Phase 1.5 데이터는 Zustand in-memory(`stores/tastings.ts`)에 저장됨. Phase 2에서 Supabase wiring.
+
+## Claude Vision (label OCR)
+
+[`lib/labelOcr.ts`](lib/labelOcr.ts) — 라벨 사진 → distillery/age/abv 자동 식별. 현재는 deterministic 스텁(시드 카탈로그에서 순환 선택). 활성화하려면:
+
+```
+EXPO_PUBLIC_ANTHROPIC_API_KEY=<key>
+```
+
+`isOcrConfigured` 플래그가 true일 때만 실제 Vision API 호출.
 
 ## Phase 1 (this session) — DoD
 
@@ -91,14 +100,25 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 - [x] 위스키 상세 액션 우선순위: 시음 노트 남기기 > 셀러에 추가 > 위시리스트
 - [x] Web export 검증
 
+## Phase 1.5 — 시음 일기 동작 (this session)
+
+- [x] **시음 노트 composer** (`app/tasting/new.tsx`) — 위스키 선택 + Nose/Palate/Finish + 별점 + 자리(setting). OCR 자동 채우기 버튼 포함
+- [x] **시음 노트 상세** (`app/tasting/[id].tsx`) — 저장된 노트를 양피지 카드로 표시 + Discard + 인스타 share
+- [x] **인스타 share 카드** (`app/tasting/share/[id].tsx`) — TROVE 헤더 + 양피지 카드 + footer 통합 캔버스, `react-native-view-shot`로 PNG 캡처, `expo-sharing`으로 시스템 share
+- [x] **Claude Vision OCR 스텁** (`lib/labelOcr.ts`) — 데모용 deterministic identifier, API key 셋업 시 실제 호출
+- [x] **Supabase 스키마 SQL** (`supabase/migrations/0001_init.sql` + `seed.sql`) — distilleries · bottles · user_bottles · tastings · wishlist + RLS
+- [x] **Diary tab** — 시음 노트 리스트(별점 + 미리보기 + 날짜), 빈 상태는 invitation 카드
+- [x] **Cellar tab 연동** — 시음한 위스키는 owned로 진열(밝은 핀조명), MSRP 합산 → Est. Value, 평균 별점 → Avg. Score
+- [x] **BottlePicker** 컴포넌트 — composer 안 horizontal scroll selector
+
 ## Phase 2 (next)
 
-- 카메라 + 라벨 OCR (Claude Vision)
-- 시음 노트 작성 폼 (Nose/Palate/Finish 가이드)
-- 인스타 카드 자동 생성 (양피지 그대로)
+- 카메라 권한 + expo-image-picker 실 연동 → Vision API
 - PDF 셀러 카탈로그 export
 - 가격 추적 (한국 면세점 시세)
 - 위스키 추천 (보유 패턴 기반)
+- AsyncStorage hydration (앱 재시작 시 노트 복원)
+- Supabase 실 wiring + auth 마이그레이션
 
 ---
 

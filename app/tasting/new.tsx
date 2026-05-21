@@ -1,0 +1,302 @@
+import { useState, useMemo } from 'react';
+import {
+  ScrollView,
+  View,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Text } from '@/components/ui/Text';
+import { MonoLabel } from '@/components/ui/MonoLabel';
+import { Divider } from '@/components/ui/Divider';
+import { BottlePicker } from '@/components/BottlePicker';
+import { StarRating } from '@/components/StarRating';
+import { BOTTLES_SEED } from '@/constants/bottles-seed';
+import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
+import { colors } from '@/constants/tokens';
+import { useTastings } from '@/stores/tastings';
+import { identifyLabel, isOcrConfigured } from '@/lib/labelOcr';
+import type { Bottle } from '@/lib/types';
+
+export default function TastingComposerScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ bottleId?: string }>();
+  const addTasting = useTastings((s) => s.add);
+
+  const [bottle, setBottle] = useState<Bottle | undefined>(
+    params.bottleId ? BOTTLES_SEED.find((b) => b.id === params.bottleId) : undefined
+  );
+  const [nose, setNose] = useState('');
+  const [palate, setPalate] = useState('');
+  const [finish, setFinish] = useState('');
+  const [stars, setStars] = useState(0);
+  const [setting, setSetting] = useState('');
+  const [ocrLoading, setOcrLoading] = useState(false);
+
+  const distillery = useMemo(
+    () => bottle && DISTILLERIES_SEED.find((d) => d.slug === bottle.distillerySlug),
+    [bottle]
+  );
+
+  const canSave = !!bottle && (nose || palate || finish || stars > 0);
+
+  const onScan = async () => {
+    setOcrLoading(true);
+    try {
+      const guess = await identifyLabel('camera://stub');
+      setBottle(guess.bottle);
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const onSave = () => {
+    if (!bottle) return;
+    const t = addTasting({
+      bottleId: bottle.id,
+      tastedAt: new Date().toISOString(),
+      nose: nose.trim() || undefined,
+      palate: palate.trim() || undefined,
+      finish: finish.trim() || undefined,
+      ratingStars: stars || undefined,
+      setting: setting.trim() || undefined,
+    });
+    router.replace(`/tasting/${t.id}`);
+  };
+
+  return (
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Top nav */}
+          <View style={{ paddingTop: 12, paddingBottom: 18, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Pressable onPress={() => router.back()} hitSlop={12}>
+              <Text variant="mono" tone="brass" upper tracking={2.5} style={{ fontSize: 11 }}>
+                ← Cancel
+              </Text>
+            </Pressable>
+            <MonoLabel size={9} tracking={2.5}>new tasting</MonoLabel>
+          </View>
+
+          {/* Title */}
+          <View style={{ marginBottom: 24, alignItems: 'center' }}>
+            <Text variant="serifKr" tone="parchment" style={{ fontSize: 24, lineHeight: 34, textAlign: 'center' }}>
+              오늘의 한 잔
+            </Text>
+            <View style={{ marginTop: 6 }}>
+              <Text variant="displayEnItalic" tone="brassLight" style={{ fontSize: 15 }}>
+                One pour, one memory.
+              </Text>
+            </View>
+          </View>
+
+          {/* OCR scan CTA */}
+          <Pressable
+            onPress={() => {
+              if (!isOcrConfigured) {
+                Alert.alert(
+                  '라벨 자동 식별',
+                  'Claude Vision API 키가 설정되지 않았습니다. 데모용 식별을 진행할까요?',
+                  [
+                    { text: '취소', style: 'cancel' },
+                    { text: '데모 실행', onPress: onScan },
+                  ]
+                );
+              } else {
+                onScan();
+              }
+            }}
+            style={({ pressed }) => ({
+              paddingVertical: 14,
+              paddingHorizontal: 18,
+              borderWidth: 1,
+              borderColor: pressed ? colors.brass : colors.line,
+              borderStyle: 'dashed',
+              borderRadius: 2,
+              marginBottom: 28,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              opacity: ocrLoading ? 0.6 : 1,
+            })}
+            disabled={ocrLoading}
+          >
+            <View style={{ flex: 1 }}>
+              <MonoLabel size={9} tracking={2.5} tone="brass">
+                {ocrLoading ? '식별 중 …' : '📷 라벨로 자동 채우기'}
+              </MonoLabel>
+              <View style={{ marginTop: 4 }}>
+                <Text variant="serifAged" tone="inkMuted" style={{ fontSize: 12 }}>
+                  Snap the label — Claude reads the distillery, age, ABV
+                </Text>
+              </View>
+            </View>
+            {ocrLoading && <ActivityIndicator color={colors.brass} />}
+          </Pressable>
+
+          {/* Bottle picker */}
+          <BottlePicker selectedId={bottle?.id} onSelect={setBottle} />
+
+          {bottle && distillery && (
+            <View
+              style={{
+                marginTop: 14,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                backgroundColor: 'rgba(184, 149, 78, 0.08)',
+                borderRadius: 2,
+              }}
+            >
+              <MonoLabel size={8} tracking={2.5} tone="brass">{distillery.region}</MonoLabel>
+              <View style={{ marginTop: 4, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Text variant="displayEnBold" tone="parchment" style={{ fontSize: 18 }}>
+                  {distillery.name}
+                </Text>
+                <Text variant="mono" tone="brassLight" style={{ fontSize: 10, letterSpacing: 1.5 }}>
+                  {bottle.ageYears ? `${bottle.ageYears} YR` : 'NAS'} · {bottle.abv}%
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <Divider />
+
+          {/* Notes — Nose / Palate / Finish */}
+          <NoteField
+            label="Nose · 향"
+            hint="첫 향을 한 줄로 남겨주세요."
+            value={nose}
+            onChangeText={setNose}
+          />
+          <NoteField
+            label="Palate · 맛"
+            hint="혀에 닿은 인상을 적어주세요."
+            value={palate}
+            onChangeText={setPalate}
+          />
+          <NoteField
+            label="Finish · 피니쉬"
+            hint="남은 여운을 기록해주세요."
+            value={finish}
+            onChangeText={setFinish}
+          />
+
+          {/* Rating */}
+          <View style={{ marginTop: 18, alignItems: 'center' }}>
+            <MonoLabel size={9} tracking={2.5} tone="brass">평점</MonoLabel>
+            <View style={{ marginTop: 10 }}>
+              <StarRating value={stars} onChange={setStars} size={32} />
+            </View>
+          </View>
+
+          {/* Setting (optional) */}
+          <View style={{ marginTop: 22 }}>
+            <View style={{ marginBottom: 8 }}>
+              <MonoLabel tracking={2.5} tone="brass">자리 · setting</MonoLabel>
+            </View>
+            <TextInput
+              value={setting}
+              onChangeText={setSetting}
+              placeholder="혼자 · 친구와 · 위스키 동호회 …"
+              placeholderTextColor={colors.inkDeep}
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: colors.line,
+                paddingVertical: 10,
+                color: colors.ink,
+                fontSize: 14,
+                fontFamily: 'EBGaramond_400Regular',
+              }}
+            />
+          </View>
+
+          {/* Save */}
+          <View style={{ marginTop: 36 }}>
+            <Pressable
+              onPress={onSave}
+              disabled={!canSave}
+              style={({ pressed }) => ({
+                paddingVertical: 16,
+                alignItems: 'center',
+                backgroundColor: !canSave ? colors.walnut : pressed ? colors.amberDeep : colors.brass,
+                borderRadius: 2,
+                opacity: !canSave ? 0.6 : 1,
+              })}
+            >
+              <Text
+                variant="displayEn"
+                tone="bourbon"
+                style={{ fontSize: 13, letterSpacing: 3.5, textTransform: 'uppercase' }}
+              >
+                한 잔의 기록 보관
+              </Text>
+              <View style={{ marginTop: 3 }}>
+                <Text variant="displayEnItalic" tone="amberDeep" style={{ fontSize: 11, opacity: 0.85 }}>
+                  Save tasting
+                </Text>
+              </View>
+            </Pressable>
+            {!canSave && (
+              <View style={{ marginTop: 10, alignItems: 'center' }}>
+                <Text variant="serifAged" tone="inkDeep" style={{ fontSize: 12 }}>
+                  위스키와 노트 한 줄 또는 평점이 필요합니다.
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+function NoteField({
+  label,
+  hint,
+  value,
+  onChangeText,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChangeText: (v: string) => void;
+}) {
+  return (
+    <View style={{ marginTop: 18 }}>
+      <View style={{ marginBottom: 6 }}>
+        <MonoLabel tracking={2.5} tone="brass">{label}</MonoLabel>
+      </View>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={hint}
+        placeholderTextColor={colors.inkDeep}
+        multiline
+        style={{
+          minHeight: 56,
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          color: colors.ink,
+          fontSize: 14,
+          lineHeight: 22,
+          fontFamily: 'NotoSerifKR_500Medium',
+          borderWidth: 1,
+          borderColor: colors.line,
+          borderRadius: 2,
+          textAlignVertical: 'top',
+        }}
+      />
+    </View>
+  );
+}

@@ -8,9 +8,11 @@ import { Divider } from '@/components/ui/Divider';
 import { Card } from '@/components/ui/Card';
 import { BottleCard } from '@/components/BottleCard';
 import { TastingNoteCard } from '@/components/TastingNoteCard';
+import { StarRating } from '@/components/StarRating';
 import { BOTTLES_SEED } from '@/constants/bottles-seed';
 import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
 import { colors } from '@/constants/tokens';
+import { useTastings } from '@/stores/tastings';
 
 export default function BottleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +23,8 @@ export default function BottleDetailScreen() {
     () => bottle && DISTILLERIES_SEED.find((d) => d.slug === bottle.distillerySlug),
     [bottle]
   );
+  const tastings = useTastings((s) => (id ? s.byBottle(id) : []));
+  const latest = tastings[0];
 
   if (!bottle || !distillery) {
     return (
@@ -124,30 +128,68 @@ export default function BottleDetailScreen() {
           </View>
         </Card>
 
-        {/* Tasting note placeholder */}
+        {/* Latest tasting (or placeholder) */}
         <View style={{ marginTop: 36, marginBottom: 22, alignItems: 'center' }}>
           <Text variant="displayEnItalic" tone="brassLight" style={{ fontSize: 17 }}>
-            Latest tasting
+            {latest ? 'Latest tasting' : 'No tastings yet'}
           </Text>
           <View style={{ marginTop: 4 }}>
-            <MonoLabel size={9} tracking={2.7}>note №000</MonoLabel>
+            <MonoLabel size={9} tracking={2.7}>
+              {latest ? `note №${latest.id.slice(2, 6)}` : 'note №000'}
+            </MonoLabel>
           </View>
         </View>
 
         <TastingNoteCard
-          number="01"
+          number={latest ? latest.id.slice(2, 4).toUpperCase() : '01'}
           region={bottle.region}
           distillery={distillery.name}
           expression={bottle.expression}
           age={bottle.ageYears}
+          nose={latest?.nose}
+          palate={latest?.palate}
+          finish={latest?.finish}
           cask={bottle.caskType}
           abv={bottle.abv}
-          placeholder="detail"
+          ratingStars={latest?.ratingStars}
+          acquiredAt={latest ? formatDate(latest.tastedAt) : undefined}
+          placeholder={latest ? undefined : 'detail'}
         />
+
+        {/* Past tastings list */}
+        {tastings.length > 1 && (
+          <View style={{ marginTop: 28 }}>
+            <View style={{ marginBottom: 12 }}>
+              <MonoLabel tracking={2.5} tone="brass">{`이전 시음 · ${tastings.length - 1}회`}</MonoLabel>
+            </View>
+            <View style={{ gap: 8 }}>
+              {tastings.slice(1).map((t) => (
+                <Pressable
+                  key={t.id}
+                  onPress={() => router.push(`/tasting/${t.id}`)}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    backgroundColor: pressed ? 'rgba(184, 149, 78, 0.08)' : 'transparent',
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.line,
+                  })}
+                >
+                  <MonoLabel size={10} tracking={1.5}>{formatDate(t.tastedAt)}</MonoLabel>
+                  <StarRating value={t.ratingStars ?? 0} size={12} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Actions — tasting is primary; cellar is a side effect */}
         <View style={{ marginTop: 28, gap: 12 }}>
           <Pressable
+            onPress={() => router.push(`/tasting/new?bottleId=${bottle.id}`)}
             style={({ pressed }) => ({
               paddingVertical: 16,
               alignItems: 'center',
@@ -240,4 +282,9 @@ function formatKrw(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 10_000) return `${Math.round(n / 10_000)}만`;
   return n.toLocaleString('ko-KR');
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }

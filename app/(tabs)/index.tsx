@@ -1,21 +1,24 @@
 import { ScrollView, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { BrandWordmark } from '@/components/BrandWordmark';
 import { Crest } from '@/components/Crest';
 import { Text } from '@/components/ui/Text';
 import { MonoLabel } from '@/components/ui/MonoLabel';
 import { TastingNoteCard } from '@/components/TastingNoteCard';
+import { StarRating } from '@/components/StarRating';
 import { colors } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
+import { useTastings } from '@/stores/tastings';
+import { BOTTLES_SEED } from '@/constants/bottles-seed';
+import { DISTILLERIES_SEED } from '@/constants/distilleries-seed';
+import type { Tasting } from '@/lib/types';
 
-// Tasting Diary — primary surface.
-// "위스키 시음 일기" — one pour at a time. Cellar is a side effect.
 export default function DiaryScreen() {
+  const router = useRouter();
   const session = useAuth((s) => s.session);
   const cask = session?.caskNumber ?? 'CASK 001';
-
-  // Phase 1: no tastings yet — show invitation state.
-  const tastings: never[] = [];
+  const tastings = useTastings((s) => s.tastings);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.espresso }}>
@@ -86,10 +89,7 @@ export default function DiaryScreen() {
         {/* Primary CTA */}
         <View style={{ marginTop: 14, marginBottom: 40 }}>
           <Pressable
-            onPress={() => {
-              // Phase 2: route to tasting-note composer.
-              // For now, this leads to the cellar so the user can pick a bottle.
-            }}
+            onPress={() => router.push('/tasting/new')}
             style={({ pressed }) => ({
               paddingVertical: 18,
               alignItems: 'center',
@@ -121,7 +121,7 @@ export default function DiaryScreen() {
           </Pressable>
         </View>
 
-        {/* Section divider — "what your first note will look like" */}
+        {/* Section divider */}
         <View
           style={{
             flexDirection: 'row',
@@ -148,29 +148,19 @@ export default function DiaryScreen() {
           <MonoLabel size={10} tracking={1.5}>{`${tastings.length} · entries`}</MonoLabel>
         </View>
 
-        {/* Invitation parchment card — sample preview */}
         {tastings.length === 0 ? (
-          <>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <Text
-                variant="displayEnItalic"
-                tone="brassLight"
-                style={{ fontSize: 15 }}
-              >
-                — preview of your first note —
-              </Text>
-            </View>
-            <TastingNoteCard
-              distillery=""
-              placeholder="invitation"
-            />
-            <View style={{ alignItems: 'center', marginTop: 22 }}>
-              <Text variant="serifKr" tone="inkMuted" style={{ fontSize: 13, lineHeight: 22, textAlign: 'center' }}>
-                한 잔의 향과 맛, 피니쉬를 남기면{'\n'}이런 양피지 카드 한 장으로 보관됩니다.
-              </Text>
-            </View>
-          </>
-        ) : null}
+          <EmptyState />
+        ) : (
+          <View style={{ gap: 14 }}>
+            {tastings.map((t) => (
+              <TastingListRow
+                key={t.id}
+                tasting={t}
+                onPress={() => router.push(`/tasting/${t.id}`)}
+              />
+            ))}
+          </View>
+        )}
 
         {/* Manifesto */}
         <View
@@ -208,4 +198,81 @@ export default function DiaryScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function EmptyState() {
+  return (
+    <>
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <Text variant="displayEnItalic" tone="brassLight" style={{ fontSize: 15 }}>
+          — preview of your first note —
+        </Text>
+      </View>
+      <TastingNoteCard distillery="" placeholder="invitation" />
+      <View style={{ alignItems: 'center', marginTop: 22 }}>
+        <Text variant="serifKr" tone="inkMuted" style={{ fontSize: 13, lineHeight: 22, textAlign: 'center' }}>
+          {`한 잔의 향과 맛, 피니쉬를 남기면\n이런 양피지 카드 한 장으로 보관됩니다.`}
+        </Text>
+      </View>
+    </>
+  );
+}
+
+function TastingListRow({ tasting, onPress }: { tasting: Tasting; onPress: () => void }) {
+  const bottle = BOTTLES_SEED.find((b) => b.id === tasting.bottleId);
+  const dist = bottle && DISTILLERIES_SEED.find((d) => d.slug === bottle.distillerySlug);
+  if (!bottle || !dist) return null;
+
+  const date = formatDate(tasting.tastedAt);
+  const preview = tasting.nose || tasting.palate || tasting.finish || '— 노트 없이 평점만 남김 —';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        padding: 18,
+        backgroundColor: pressed ? 'rgba(184, 149, 78, 0.08)' : colors.bourbon,
+        borderWidth: 1,
+        borderColor: colors.line,
+        borderRadius: 2,
+      })}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+            <Text variant="displayEnBold" tone="parchment" style={{ fontSize: 18, letterSpacing: 0.3 }}>
+              {dist.name}
+            </Text>
+            <Text variant="mono" tone="brass" style={{ fontSize: 10, letterSpacing: 1.5, marginLeft: 8 }}>
+              {bottle.ageYears ? `${bottle.ageYears} YR` : 'NAS'}
+            </Text>
+          </View>
+          <View style={{ marginTop: 4 }}>
+            <MonoLabel size={8} tracking={2} tone="inkMuted">{bottle.region}</MonoLabel>
+          </View>
+        </View>
+        <MonoLabel size={9} tracking={1.5} tone="inkDeep">{date}</MonoLabel>
+      </View>
+      <View style={{ marginTop: 10 }}>
+        <Text
+          variant="serifKr"
+          tone="ink"
+          style={{ fontSize: 13, lineHeight: 21, opacity: 0.85 }}
+          numberOfLines={2}
+        >
+          {preview}
+        </Text>
+      </View>
+      {(tasting.ratingStars ?? 0) > 0 && (
+        <View style={{ marginTop: 10, opacity: 0.85 }}>
+          <StarRating value={tasting.ratingStars ?? 0} size={14} tone="brass" />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
