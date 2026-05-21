@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trove Cellar — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Surfaces (dark library) */
+    --espresso: #1A1208;
+    --bourbon: #2B1E14;
+    --walnut: #3D2A1B;
+    --oak: #4A3422;
+    /* Accents */
+    --brass: #B8954E;
+    --brass-light: #D4A574;
+    --amber: #C8761F;
+    --amber-deep: #8E4A0E;
+    --gold: #C9A961;
+    /* Parchment */
+    --parchment: #E8DDB8;
+    --parchment-dark: #C9B68C;
+    --parchment-aged: #B5A074;
+    /* Text */
+    --ink: #E8DDB8;
+    --ink-muted: #A8957A;
+    --ink-deep: #6B5A42;
+    /* Utility */
+    --line: rgba(184, 149, 78, 0.18);
+    --shelf: rgba(74, 52, 34, 0.6);
+
+    --display: 'Fraunces', 'Noto Serif KR', serif;
+    --displayKr: 'Noto Serif KR', serif;
+    --serif-aged: 'EB Garamond', 'Noto Serif KR', serif;
+    --serif-classical: 'Cormorant Garamond', 'Noto Serif KR', serif;
+    --body: 'Pretendard', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--body);
+    background: var(--espresso);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(200, 118, 31, 0.08) 0%, transparent 60%),
+      radial-gradient(circle at 20% 80%, rgba(184, 149, 78, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 60%, rgba(142, 74, 14, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.72 0 0 0 0 0.58 0 0 0 0 0.31 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+  }
+
+  .frame {
+    position: relative;
+    z-index: 3;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 0 22px;
+  }
+
+  /* HEADER */
+  .hdr { padding: 40px 4px 24px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: baseline; }
+  .brand .trove { font-family: var(--display); font-weight: 500; font-size: 24px; letter-spacing: 0.18em; color: var(--parchment); }
+  .brand .cellar { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 19px; color: var(--brass-light); letter-spacing: 0.04em; margin-left: 4px; }
+  .acct { text-align: right; }
+  .acct .row { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--ink-muted); text-transform: uppercase; display: block; }
+  .acct .row:last-child { opacity: 0.65; margin-top: 2px; }
+
+  /* INTRO */
+  .intro { padding: 56px 0 32px; text-align: center; }
+  .intro .crest { width: 36px; height: 36px; margin: 0 auto 22px; color: var(--brass); }
+  .intro .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.35em; color: var(--brass); text-transform: uppercase; margin-bottom: 16px; }
+  .intro h1 { font-family: var(--displayKr); font-weight: 400; font-size: 32px; line-height: 1.4; color: var(--parchment); letter-spacing: -0.01em; margin-bottom: 14px; }
+  .intro h1 em { font-family: var(--display); font-style: italic; font-weight: 500; color: var(--brass-light); }
+  .intro .sub { font-family: var(--display); font-style: italic; font-size: 16px; color: var(--ink-muted); letter-spacing: 0.02em; }
+
+  /* STATS BAR */
+  .stats-bar { margin: 36px 0 56px; padding: 28px 22px; background: linear-gradient(135deg, var(--bourbon) 0%, var(--walnut) 100%); border: 1px solid var(--line); border-radius: 2px; position: relative; }
+  .stats-bar::before { content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 60px; height: 2px; background: var(--brass); }
+  .stats-bar .label-row { text-align: center; margin-bottom: 14px; }
+  .stats-bar .label-row .l { font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--ink-muted); text-transform: uppercase; }
+  .stats-bar .label-row .e { font-family: var(--display); font-style: italic; font-size: 13px; color: var(--brass-light); margin-left: 6px; }
+  .stats-bar .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .stats-bar .stat { text-align: center; padding: 4px 0; }
+  .stats-bar .stat + .stat { border-left: 1px solid var(--line); }
+  .stats-bar .stat .v { font-family: var(--display); font-size: 30px; font-weight: 400; color: var(--parchment); line-height: 1; letter-spacing: -0.01em; }
+  .stats-bar .stat .v .small { font-size: 16px; color: var(--brass-light); margin-left: 1px; }
+  .stats-bar .stat .k { font-family: var(--mono); font-size: 8px; letter-spacing: 0.22em; color: var(--ink-muted); text-transform: uppercase; margin-top: 6px; }
+
+  /* SECTION LABEL */
+  .section-lbl { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .section-lbl .title { font-family: var(--displayKr); font-weight: 500; font-size: 17px; color: var(--parchment); }
+  .section-lbl .title em { font-family: var(--display); font-style: italic; font-weight: 500; color: var(--brass-light); font-size: 15px; margin-left: 8px; }
+  .section-lbl .right { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); letter-spacing: 0.15em; text-transform: uppercase; }
+
+  /* CELLAR SHELVES */
+  .shelves { margin-bottom: 56px; }
+  .shelf { position: relative; margin-bottom: 28px; padding-top: 8px; padding-bottom: 8px; }
+  .shelf::before { content: ''; position: absolute; top: -10px; left: 6%; right: 6%; height: 7px; background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 145, 0.22) 18%, rgba(255, 215, 145, 0.22) 82%, transparent 100%); filter: blur(4px); pointer-events: none; z-index: 0; }
+  .shelf::after { content: ''; position: absolute; bottom: 0; left: -10px; right: -10px; height: 6px; background: linear-gradient(180deg, var(--oak) 0%, var(--walnut) 50%, var(--espresso) 100%); border-radius: 1px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); }
+  .shelf .row { display: flex; justify-content: space-around; align-items: flex-end; gap: 4px; padding: 0 4px; }
+
+  /* BOTTLE */
+  .bottle { flex: 1; max-width: 92px; position: relative; cursor: pointer; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; align-items: center; }
+  .bottle:hover { transform: translateY(-4px); }
+  .bottle::before { content: ''; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); width: 94px; height: 172px; background: radial-gradient(ellipse 30% 70% at 50% 0%, rgba(255, 218, 148, 0.38) 0%, rgba(255, 198, 124, 0.18) 35%, rgba(255, 182, 100, 0.05) 65%, rgba(255, 180, 100, 0) 100%); pointer-events: none; z-index: 0; filter: blur(3px); }
+  .bottle::after { content: ''; position: absolute; top: 118px; left: 50%; transform: translateX(-50%); width: 84px; height: 22px; background: radial-gradient(ellipse at center, rgba(255, 198, 124, 0.48) 0%, rgba(255, 182, 100, 0.20) 45%, transparent 80%); pointer-events: none; z-index: 0; filter: blur(3px); }
+  .shelf:first-child .bottle:nth-child(2)::before { background: radial-gradient(ellipse 30% 70% at 50% 0%, rgba(255, 225, 158, 0.52) 0%, rgba(255, 205, 132, 0.26) 35%, rgba(255, 182, 100, 0.06) 65%, rgba(255, 180, 100, 0) 100%); }
+  .shelf:first-child .bottle:nth-child(2)::after { background: radial-gradient(ellipse at center, rgba(255, 205, 132, 0.60) 0%, rgba(255, 182, 100, 0.26) 45%, transparent 80%); }
+  .bottle .silhouette { width: 64px; height: 132px; position: relative; z-index: 1; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6)); }
+  .bottle .name, .bottle .meta { position: relative; z-index: 1; }
+  .bottle .silhouette svg { width: 100%; height: 100%; }
+  .bottle .name { font-family: var(--display); font-weight: 500; font-size: 11px; color: var(--parchment); margin-top: 10px; text-align: center; line-height: 1.2; letter-spacing: 0.02em; }
+  .bottle .meta { font-family: var(--mono); font-size: 8px; color: var(--ink-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 3px; }
+  .bottle.empty .silhouette { filter: none; opacity: 0.25; }
+  .bottle.empty::before { opacity: 0.18; }
+  .bottle.empty::after { opacity: 0.14; }
+  .bottle.empty .silhouette svg { stroke-dasharray: 2 3; }
+  .bottle.empty .name, .bottle.empty .meta { color: var(--ink-deep); }
+
+  /* FEATURED TASTING CARD */
+  .featured-wrap { margin: 64px 0 36px; }
+  .featured-label { text-align: center; margin-bottom: 22px; }
+  .featured-label .e { font-family: var(--display); font-style: italic; font-size: 17px; color: var(--brass-light); }
+  .featured-label .l { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--ink-muted); margin-top: 4px; text-transform: uppercase; }
+  .tasting { background: var(--parchment); color: var(--bourbon); padding: 32px 26px 28px; border-radius: 2px; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3); border: 1px solid var(--parchment-aged); }
+  .tasting::before { content: ''; position: absolute; inset: 8px; border: 1px solid var(--parchment-aged); opacity: 0.6; pointer-events: none; }
+  .tasting .stamp { position: absolute; top: 16px; right: 18px; width: 56px; height: 56px; border: 1.5px solid var(--amber-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--amber-deep); transform: rotate(-12deg); opacity: 0.55; }
+  .tasting .stamp .yr { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1; }
+  .tasting .stamp .lab { font-family: var(--mono); font-size: 6px; letter-spacing: 0.2em; margin-top: 2px; }
+  .tasting .label-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--amber-deep); text-transform: uppercase; margin-bottom: 8px; }
+  .tasting .distillery { font-family: var(--display); font-weight: 600; font-size: 26px; color: var(--bourbon); letter-spacing: 0.02em; line-height: 1.1; margin-bottom: 4px; }
+  .tasting .expression { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 17px; color: var(--amber-deep); letter-spacing: 0.01em; margin-bottom: 18px; }
+  .tasting .divider { height: 1px; background: var(--parchment-aged); margin: 18px 0 18px; position: relative; }
+  .tasting .divider::before { content: '◆'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--parchment); padding: 0 8px; color: var(--amber-deep); font-size: 10px; }
+  .tasting .note-block { margin-bottom: 12px; }
+  .tasting .note-key { font-family: var(--mono); font-size: 8px; letter-spacing: 0.3em; color: var(--amber-deep); text-transform: uppercase; margin-bottom: 4px; }
+  .tasting .note-val { font-family: var(--displayKr); font-weight: 400; font-size: 13px; color: var(--bourbon); line-height: 1.6; }
+  .tasting .meta-grid { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--parchment-aged); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .tasting .meta-grid .item { text-align: center; }
+  .tasting .meta-grid .k { font-family: var(--mono); font-size: 7px; letter-spacing: 0.25em; color: var(--amber-deep); text-transform: uppercase; margin-bottom: 4px; }
+  .tasting .meta-grid .v { font-family: var(--display); font-weight: 500; font-size: 13px; color: var(--bourbon); letter-spacing: 0.02em; }
+  .tasting .footer { margin-top: 22px; text-align: center; }
+  .tasting .footer .rating { font-family: var(--display); font-size: 14px; letter-spacing: 0.3em; color: var(--amber-deep); margin-bottom: 6px; }
+  .tasting .footer .acquired { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; color: var(--ink-deep); text-transform: uppercase; }
+
+  /* MANIFESTO */
+  .manifesto { padding: 56px 12px 36px; margin-top: 24px; border-top: 1px solid var(--line); text-align: center; }
+  .manifesto .q-en { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 21px; line-height: 1.5; color: var(--parchment); margin-bottom: 14px; }
+  .manifesto .q-kr { font-family: var(--displayKr); font-weight: 400; font-size: 15px; line-height: 1.75; color: var(--ink-muted); letter-spacing: -0.005em; }
+  .manifesto .q-kr em { font-style: normal; color: var(--brass-light); font-family: var(--display); font-weight: 500; }
+
+  /* FOOTER */
+  .ftr { padding: 36px 0 56px; text-align: center; }
+  .ftr .palette { display: flex; justify-content: center; gap: 8px; margin-bottom: 22px; }
+  .ftr .sw { width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+  .ftr .sw:nth-child(1) { background: var(--espresso); border: 1px solid var(--line); }
+  .ftr .sw:nth-child(2) { background: var(--walnut); }
+  .ftr .sw:nth-child(3) { background: var(--brass); }
+  .ftr .sw:nth-child(4) { background: var(--amber); }
+  .ftr .sw:nth-child(5) { background: var(--parchment); }
+  .ftr .sw:nth-child(6) { background: var(--amber-deep); }
+  .ftr .crest { font-family: var(--display); font-size: 11px; letter-spacing: 0.4em; color: var(--ink-muted); text-transform: uppercase; }
+  .ftr .crest em { font-family: var(--display); font-style: italic; font-weight: 500; color: var(--brass-light); letter-spacing: 0; margin-left: 4px; }
+  .ftr .est { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; color: var(--ink-deep); margin-top: 6px; }
+
+  /* ANIMATIONS */
+  @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes glow { 0%, 100% { filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6)); } 50% { filter: drop-shadow(0 8px 16px rgba(200, 118, 31, 0.25)); } }
+  .intro .crest, .intro .label, .intro h1, .intro .sub { animation: fade-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .intro .crest { animation-delay: 0.1s; }
+  .intro .label { animation-delay: 0.2s; }
+  .intro h1 { animation-delay: 0.3s; }
+  .intro .sub { animation-delay: 0.45s; }
+  .bottle { animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .bottle:nth-child(1) { animation-delay: 0.1s; }
+  .bottle:nth-child(2) { animation-delay: 0.18s; }
+  .bottle:nth-child(3) { animation-delay: 0.26s; }
+  .bottle:nth-child(4) { animation-delay: 0.34s; }
+  .bottle:nth-child(5) { animation-delay: 0.42s; }
+  .bottle:nth-child(2) .silhouette { animation: glow 5s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="amber-liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8A35C"/><stop offset="50%" stop-color="#C8761F"/><stop offset="100%" stop-color="#8E4A0E"/></linearGradient>
+    <linearGradient id="dark-liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B5743A"/><stop offset="50%" stop-color="#7A4818"/><stop offset="100%" stop-color="#3A1F08"/></linearGradient>
+    <linearGradient id="gold-liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F0C778"/><stop offset="50%" stop-color="#D4A574"/><stop offset="100%" stop-color="#9C7A3E"/></linearGradient>
+    <linearGradient id="pale-liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F5DDA0"/><stop offset="50%" stop-color="#D4B57A"/><stop offset="100%" stop-color="#8E6F3A"/></linearGradient>
+
+    <symbol id="bot-malt" viewBox="0 0 64 132">
+      <rect x="26" y="2" width="12" height="14" fill="#2B1E14" stroke="#1A1208" stroke-width="0.5"/>
+      <rect x="27" y="16" width="10" height="20" fill="url(#amber-liq)" opacity="0.85"/>
+      <rect x="27" y="16" width="10" height="20" fill="none" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M27 36 Q22 36 18 44 L18 124 Q18 130 24 130 L40 130 Q46 130 46 124 L46 44 Q42 36 37 36 Z" fill="url(#amber-liq)" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M22 50 Q22 70 22 110" fill="none" stroke="#F0C778" stroke-width="1.2" opacity="0.55" stroke-linecap="round"/>
+      <rect x="22" y="68" width="20" height="32" fill="#E8DDB8" stroke="#8E4A0E" stroke-width="0.5"/>
+      <line x1="24" y1="74" x2="40" y2="74" stroke="#8E4A0E" stroke-width="0.4" opacity="0.6"/>
+      <text x="32" y="83" font-family="serif" font-size="3.5" fill="#2B1E14" text-anchor="middle" font-weight="600">SINGLE</text>
+      <text x="32" y="88" font-family="serif" font-size="3.5" fill="#2B1E14" text-anchor="middle" font-weight="600">MALT</text>
+      <line x1="26" y1="92" x2="38" y2="92" stroke="#8E4A0E" stroke-width="0.4"/>
+      <text x="32" y="97" font-family="serif" font-size="2.8" fill="#8E4A0E" text-anchor="middle" font-style="italic">aged 18</text>
+    </symbol>
+
+    <symbol id="bot-bourbon" viewBox="0 0 64 132">
+      <rect x="25" y="2" width="14" height="12" fill="#2B1E14" stroke="#1A1208" stroke-width="0.5"/>
+      <rect x="27" y="14" width="10" height="18" fill="url(#dark-liq)"/>
+      <rect x="27" y="14" width="10" height="18" fill="none" stroke="#1A1208" stroke-width="0.8"/>
+      <rect x="16" y="32" width="32" height="98" fill="url(#dark-liq)" stroke="#1A1208" stroke-width="0.8" rx="2"/>
+      <path d="M20 40 L20 120" stroke="#B5743A" stroke-width="1.2" opacity="0.5" stroke-linecap="round"/>
+      <rect x="20" y="64" width="24" height="38" fill="#C9B68C" stroke="#8E4A0E" stroke-width="0.5"/>
+      <line x1="22" y1="70" x2="42" y2="70" stroke="#8E4A0E" stroke-width="0.4"/>
+      <text x="32" y="79" font-family="serif" font-size="3.2" fill="#3D2A1B" text-anchor="middle" font-weight="700">BOURBON</text>
+      <text x="32" y="84" font-family="serif" font-size="2.8" fill="#3D2A1B" text-anchor="middle">KENTUCKY</text>
+      <line x1="26" y1="88" x2="38" y2="88" stroke="#8E4A0E" stroke-width="0.4"/>
+      <text x="32" y="96" font-family="serif" font-size="3" fill="#8E4A0E" text-anchor="middle" font-style="italic">12 YR</text>
+    </symbol>
+
+    <symbol id="bot-japan" viewBox="0 0 64 132">
+      <rect x="27" y="2" width="10" height="10" fill="#1A1208" stroke="#000" stroke-width="0.5"/>
+      <rect x="28" y="12" width="8" height="18" fill="url(#gold-liq)"/>
+      <rect x="28" y="12" width="8" height="18" fill="none" stroke="#1A1208" stroke-width="0.8"/>
+      <rect x="20" y="30" width="24" height="100" fill="url(#gold-liq)" stroke="#1A1208" stroke-width="0.8"/>
+      <line x1="24" y1="40" x2="24" y2="120" stroke="#F0C778" stroke-width="1" opacity="0.5"/>
+      <rect x="23" y="58" width="18" height="44" fill="#E8DDB8" stroke="#8E4A0E" stroke-width="0.5"/>
+      <text x="32" y="68" font-family="serif" font-size="3" fill="#2B1E14" text-anchor="middle" font-weight="700">山</text>
+      <text x="32" y="76" font-family="serif" font-size="2.6" fill="#2B1E14" text-anchor="middle">YAMAZAKI</text>
+      <line x1="26" y1="80" x2="38" y2="80" stroke="#8E4A0E" stroke-width="0.4"/>
+      <text x="32" y="89" font-family="serif" font-size="3.5" fill="#8E4A0E" text-anchor="middle" font-style="italic" font-weight="500">12</text>
+      <text x="32" y="98" font-family="serif" font-size="2" fill="#2B1E14" text-anchor="middle">SUNTORY</text>
+    </symbol>
+
+    <symbol id="bot-islay" viewBox="0 0 64 132">
+      <rect x="26" y="2" width="12" height="13" fill="#1A1208"/>
+      <rect x="28" y="15" width="8" height="22" fill="url(#dark-liq)"/>
+      <rect x="28" y="15" width="8" height="22" fill="none" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M28 37 Q22 38 20 46 L20 124 Q20 130 26 130 L38 130 Q44 130 44 124 L44 46 Q42 38 36 37 Z" fill="url(#dark-liq)" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M24 48 Q24 80 24 118" fill="none" stroke="#B5743A" stroke-width="1" opacity="0.5"/>
+      <rect x="22" y="64" width="20" height="36" fill="#3D2A1B" stroke="#B8954E" stroke-width="0.5"/>
+      <text x="32" y="74" font-family="serif" font-size="3" fill="#C9A961" text-anchor="middle" font-weight="700">ARDBEG</text>
+      <line x1="26" y1="78" x2="38" y2="78" stroke="#B8954E" stroke-width="0.4"/>
+      <text x="32" y="86" font-family="serif" font-size="3" fill="#B8954E" text-anchor="middle" font-style="italic">10</text>
+      <text x="32" y="93" font-family="serif" font-size="2" fill="#C9A961" text-anchor="middle">ISLAY</text>
+    </symbol>
+
+    <symbol id="bot-highland" viewBox="0 0 64 132">
+      <rect x="26" y="2" width="12" height="12" fill="#2B1E14"/>
+      <rect x="27" y="14" width="10" height="18" fill="url(#pale-liq)"/>
+      <rect x="27" y="14" width="10" height="18" fill="none" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M27 32 Q20 34 18 42 L18 122 Q18 130 26 130 L38 130 Q46 130 46 122 L46 42 Q44 34 37 32 Z" fill="url(#pale-liq)" stroke="#1A1208" stroke-width="0.8"/>
+      <path d="M23 48 Q23 80 23 116" fill="none" stroke="#F5DDA0" stroke-width="1.2" opacity="0.6"/>
+      <ellipse cx="32" cy="80" rx="14" ry="20" fill="#C9B68C" stroke="#8E4A0E" stroke-width="0.5"/>
+      <text x="32" y="76" font-family="serif" font-size="3" fill="#2B1E14" text-anchor="middle" font-weight="700">HIGHLAND</text>
+      <line x1="24" y1="80" x2="40" y2="80" stroke="#8E4A0E" stroke-width="0.4"/>
+      <text x="32" y="86" font-family="serif" font-size="3.5" fill="#8E4A0E" text-anchor="middle" font-style="italic" font-weight="500">15</text>
+      <text x="32" y="92" font-family="serif" font-size="2" fill="#2B1E14" text-anchor="middle">PARK</text>
+    </symbol>
+
+    <symbol id="bot-empty" viewBox="0 0 64 132">
+      <rect x="26" y="2" width="12" height="14" fill="none" stroke="#4A3422" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <path d="M28 16 L28 36 Q22 38 18 46 L18 124 Q18 130 24 130 L40 130 Q46 130 46 124 L46 46 Q42 38 36 36 L36 16 Z" fill="none" stroke="#4A3422" stroke-width="0.8" stroke-dasharray="2 2"/>
+    </symbol>
+
+    <symbol id="crest" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="18" cy="18" r="13" fill="none" stroke="currentColor" stroke-width="0.5"/>
+      <path d="M18 7 L20 13 L26 13 L22 17 L24 23 L18 19 L12 23 L14 17 L10 13 L16 13 Z" fill="currentColor"/>
+      <text x="18" y="29" font-family="serif" font-size="3.5" font-style="italic" fill="currentColor" text-anchor="middle" letter-spacing="0.1em">EST · 2026</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="frame">
+  <header class="hdr">
+    <div class="brand">
+      <span class="trove">TROVE</span>
+      <span class="cellar">cellar</span>
+    </div>
+    <div class="acct">
+      <span class="row">MEMBER · CASK 001</span>
+      <span class="row">Est. 2026</span>
+    </div>
+  </header>
+
+  <section class="intro">
+    <svg class="crest"><use href="#crest"/></svg>
+    <div class="label">Private Whisky Library</div>
+    <h1>당신의 한 잔이<br><em>기록</em>이 되는 곳.</h1>
+    <div class="sub">Where every dram becomes a memory.</div>
+  </section>
+
+  <section class="stats-bar">
+    <div class="label-row"><span class="l">My Cellar</span><span class="e">summary</span></div>
+    <div class="grid">
+      <div class="stat"><div class="v">23</div><div class="k">Bottles</div></div>
+      <div class="stat"><div class="v">₩4.2<span class="small">M</span></div><div class="k">Est. Value</div></div>
+      <div class="stat"><div class="v">88<span class="small">/100</span></div><div class="k">Avg. Score</div></div>
+    </div>
+  </section>
+
+  <div class="section-lbl">
+    <div class="title">내 셀러 <em>the cabinet</em></div>
+    <div class="right">23 · curated</div>
+  </div>
+
+  <section class="shelves">
+    <div class="shelf">
+      <div class="row">
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-malt"/></svg></div><div class="name">Glenfiddich</div><div class="meta">18 · Speyside</div></div>
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-islay"/></svg></div><div class="name">Ardbeg</div><div class="meta">10 · Islay</div></div>
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-japan"/></svg></div><div class="name">Yamazaki</div><div class="meta">12 · Japan</div></div>
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-bourbon"/></svg></div><div class="name">Maker's Mark</div><div class="meta">Bourbon · KY</div></div>
+      </div>
+    </div>
+    <div class="shelf">
+      <div class="row">
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-highland"/></svg></div><div class="name">Highland Park</div><div class="meta">15 · Orkney</div></div>
+        <div class="bottle"><div class="silhouette"><svg><use href="#bot-malt"/></svg></div><div class="name">Macallan</div><div class="meta">12 · Speyside</div></div>
+        <div class="bottle empty"><div class="silhouette"><svg><use href="#bot-empty"/></svg></div><div class="name">Lagavulin</div><div class="meta">on wishlist</div></div>
+        <div class="bottle empty"><div class="silhouette"><svg><use href="#bot-empty"/></svg></div><div class="name">Hibiki</div><div class="meta">on wishlist</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="featured-wrap">
+    <div class="featured-label"><span class="e">Latest tasting</span><span class="l">— note №023 —</span></div>
+    <div class="tasting">
+      <div class="stamp"><div class="stamp-inner"><div class="yr">18</div><div class="lab">YEARS</div></div></div>
+      <div class="label-tag">Distillery №01 · Speyside</div>
+      <div class="distillery">Glenfiddich</div>
+      <div class="expression">Our Original Twelve, aged eighteen</div>
+      <div class="divider"></div>
+      <div class="note-block"><div class="note-key">Nose · 향</div><div class="note-val">잘 익은 사과, 오크 향, 시나몬, 캐러멜의 달콤한 첫 인상</div></div>
+      <div class="note-block"><div class="note-key">Palate · 맛</div><div class="note-val">셰리 캐스크의 풍부함, 말린 과일, 다크 초콜릿, 미묘한 스파이스</div></div>
+      <div class="note-block"><div class="note-key">Finish · 피니쉬</div><div class="note-val">길고 따뜻한, 오크와 꿀의 여운</div></div>
+      <div class="meta-grid">
+        <div class="item"><div class="k">Region</div><div class="v">Speyside</div></div>
+        <div class="item"><div class="k">Cask</div><div class="v">Sherry</div></div>
+        <div class="item"><div class="k">ABV</div><div class="v">40%</div></div>
+      </div>
+      <div class="footer">
+        <div class="rating">★ ★ ★ ★ ☆</div>
+        <div class="acquired">Acquired · 2026.05.21</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="manifesto">
+    <div class="q-en">"Some bottles are meant to be drunk.<br>Others, remembered."</div>
+    <div class="q-kr">어떤 잔은 비우기 위해,<br>어떤 잔은 <em>기억하기 위해.</em></div>
+  </section>
+
+  <footer class="ftr">
+    <div class="palette"><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div></div>
+    <div class="crest">TROVE · INC.<em>cellar</em></div>
+    <div class="est">PROTOTYPE · 2026.05.21</div>
+  </footer>
+</div>
+
+</body>
+</html>
