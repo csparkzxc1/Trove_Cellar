@@ -9,6 +9,80 @@
 
 **핵심 단위**: 한 병이 아닌 **한 잔(tasting)**. 메인 탭은 시음일기, 셀러는 두 번째 탭의 보조 기능.
 
+## Get started — macOS
+
+### 0. 사전 준비
+
+- **Node.js 20+** (`brew install node`)
+- **Xcode 15+** (App Store에서 설치) — iOS 시뮬레이터용
+- **Watchman** (`brew install watchman`) — 권장
+- **CocoaPods** (`brew install cocoapods` 또는 `sudo gem install cocoapods`) — `expo prebuild` 사용 시
+- 선택: **EAS CLI** (`npm i -g eas-cli`) — 클라우드 빌드/배포용
+
+Xcode 첫 실행 시 iOS Simulator 컴포넌트 다운로드. Xcode 메뉴 → Settings → Platforms에서 iOS 17+ 추가.
+
+### 1. 클론 & 설치
+
+```bash
+git clone https://github.com/csparkzxc1/Trove_Cellar.git
+cd Trove_Cellar
+git checkout claude/trove-cellar-initial-9u3Qq
+
+npm install
+
+# 선택: API 키가 있다면
+cp .env.example .env.local   # 그리고 키 채우기
+```
+
+### 2. 실행 옵션
+
+**(A) Expo Go로 빠르게 (실 디바이스, iOS/Android 무관)**
+
+```bash
+npx expo start
+```
+
+QR 코드가 뜨면 폰의 Expo Go 앱(또는 iOS는 카메라)으로 스캔. **카메라 OCR 데모는 작동하지만 `react-native-view-shot` 같은 native 모듈은 development build에서만 완전 동작.**
+
+**(B) iOS 시뮬레이터 (Mac 권장)**
+
+```bash
+npx expo run:ios
+```
+
+처음 실행 시 `expo prebuild`가 native iOS 폴더를 생성하고 CocoaPods가 설치됨 (5-10분). 이후엔 캐시되어 빠름. 시뮬레이터에서 모든 native 기능(view-shot PNG 캡처, expo-sharing, expo-print PDF, image-picker)이 동작.
+
+**(C) Android 에뮬레이터**
+
+```bash
+npx expo run:android
+```
+
+Android Studio 설치 + AVD(Android Virtual Device) 셋업 필요.
+
+**(D) Web (시각 검증용)**
+
+```bash
+npx expo export --platform web
+npx serve dist
+```
+
+웹 빌드는 시각 검증과 빠른 반복용. 카메라/share 등 native API는 비활성화되거나 알림으로 안내.
+
+### 3. 디바이스에 실제 빌드 (배포 전 단계)
+
+```bash
+# EAS 계정 로그인 (한 번)
+eas login
+
+# 시뮬레이터/내부 테스트용 빌드
+eas build --profile preview --platform ios
+
+# TestFlight/Play Console 배포
+eas build --profile production --platform all
+eas submit -p ios --latest
+```
+
 ## Stack
 
 - **Framework**: Expo SDK 54 · React Native 0.81 · Expo Router (file-based)
@@ -16,18 +90,11 @@
 - **Styling**: NativeWind v4 · Tailwind v3
 - **Animation**: react-native-reanimated v4 · react-native-worklets
 - **SVG**: react-native-svg
-- **Gradient**: expo-linear-gradient
+- **Gradient**: expo-linear-gradient · expo-blur
+- **Persistence**: AsyncStorage + Zustand persist middleware
+- **Camera/Share**: expo-image-picker · expo-sharing · react-native-view-shot · expo-print
 - **Server**: Supabase (placeholder — Phase 2에서 wiring)
-- **State**: Zustand
-
-## Get started
-
-```bash
-npm install
-npx expo start
-```
-
-웹: `npm run web` · iOS: `npm run ios` · Android: `npm run android`
+- **State**: Zustand v4
 
 ## 디자인 시스템
 
@@ -129,6 +196,16 @@ EXPO_PUBLIC_ANTHROPIC_API_KEY=<key>
 - [x] **시음 인사이트 (Profile)** — `lib/insights.ts` + `components/InsightsPanel.tsx`: Region 상위 3개 stacked bar + Cask 상위 3개 + 월별 시음 빈도 6개월 막대
 - [x] **시음 → 위시리스트 자동 정리** — 시음 저장 시 해당 bottle이 위시리스트에 있으면 자동 제거 + "위시리스트에서 정리했습니다 · 한 잔을 마셨으니 더 이상 기다리지 않아요." alert
 - [x] **셀러 정렬 강화** — 보유 위스키를 best 별점 순으로 정렬, top-rated 위스키가 자동으로 featured(밝은 핀조명 + 펄스)
+
+## macOS 트러블슈팅
+
+- **`pod install` 실패 (CocoaPods)**: `cd ios && pod repo update && pod install` 직접 실행. M1/M2 Mac은 `arch -x86_64 pod install`이 필요할 수도 있음
+- **`Unable to boot the iOS Simulator`**: Xcode 열어서 한 번 시뮬레이터를 수동으로 부팅하면 캐시 생성됨
+- **`Metro bundler` 포트 충돌**: `npx expo start --port 8082` 또는 `lsof -ti:8081 | xargs kill`
+- **폰트가 로드되지 않음**: `npx expo start --clear`로 Metro 캐시 초기화. `@expo-google-fonts/*` 패키지는 첫 빌드 시에만 다운로드됨
+- **`Reanimated` 에러**: `babel.config.js`에 `react-native-worklets/plugin`이 plugins 끝에 있는지 확인 (이미 설정됨)
+- **build cache 꼬임**: `rm -rf ios android .expo node_modules && npm install && npx expo prebuild --clean`
+- **AsyncStorage 데이터 초기화하고 싶을 때**: 시뮬레이터에서 `Device → Erase All Content and Settings`
 
 ## Phase 4 (next)
 

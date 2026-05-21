@@ -9,9 +9,16 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "kr.trove.cellar",
+      "infoPlist": {
+        "NSCameraUsageDescription": "위스키 라벨을 촬영하여 자동으로 정보를 채우는 데 사용됩니다.",
+        "NSPhotoLibraryUsageDescription": "위스키 라벨 사진을 선택해 자동으로 정보를 채우는 데 사용됩니다.",
+        "NSPhotoLibraryAddUsageDescription": "양피지 시음 카드를 사진 보관함에 저장합니다."
+      }
     },
     "android": {
+      "package": "kr.trove.cellar",
       "adaptiveIcon": {
         "backgroundColor": "#1A1208",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,11 +26,16 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
@@ -37,6 +49,13 @@
           "dark": {
             "backgroundColor": "#1A1208"
           }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "위스키 라벨을 촬영하기 위해 카메라 권한이 필요합니다.",
+          "photosPermission": "위스키 라벨 사진을 가져오기 위해 사진 권한이 필요합니다."
         }
       ]
     ],
